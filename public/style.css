@@ -1,20 +1,64 @@
 body {
     font-family: Arial, sans-serif;
-    padding: 20px;
+    margin: 2rem;
+    background-color: #f5f5f5;
+    color: #333;
 }
 
-.photo-block {
-    display: inline-block;
-    margin: 10px;
+h1 {
     text-align: center;
+    margin-bottom: 2rem;
 }
 
-img {
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+#photo-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.photo-entry {
+    border: 2px solid transparent;
+    border-radius: 5px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: border 0.2s;
+    position: relative;
+}
+
+.photo-entry img {
+    width: 100%;
+    height: auto;
     display: block;
-    margin-bottom: 5px;
+}
+
+.photo-entry.selected {
+    border: 2px solid #4caf50;
+}
+
+#submit-button {
+    display: block;
+    margin: 0 auto;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 #counter {
-    margin-top: 10px;
+    text-align: center;
+    margin-top: 1rem;
     font-weight: bold;
 }

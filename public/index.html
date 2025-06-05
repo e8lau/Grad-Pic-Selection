@@ -1,25 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Photo Selector</title>
-    <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo Selector</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-    <h1>Photo Selection</h1>
-    <label for="username">Username:</label>
+  <h1>📸 Photo Review Portal</h1>
+  <div class="controls">
+    <label for="username">Reviewer:</label>
     <select id="username">
-        <option value="ethan">Ethan</option>
-        <option value="tiffany">Tiffany</option>
+      <option value="ethan">Ethan</option>
+      <option value="tiffany">Tiffany</option>
+      <option value="friend1">Friend 1</option>
+      <!-- Add more as needed -->
     </select>
-    <button id="load">Load Photos</button>
-    <div id="counter"></div>
-    <div id="photo-container"></div>
-    <button id="submit">Submit</button>
-    <script src="script.js"></script>
-</body>
+  </div>
 
+  <div id="photo-container"></div>
+
+  <button id="submit-button">Submit Selections</button>
+
+  <div id="counter">Remaining photos: loading...</div>
+
+  <script src="script.js"></script>
+</body>
 </html>

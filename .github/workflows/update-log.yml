@@ -1,0 +1,61 @@
+name: Update Selections CSV
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'  # Runs every 30 mins
+
+jobs:
+  process-submissions:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install pandas
+
+    - name: Process JSON submissions into CSV
+      run: |
+        mkdir -p data
+        python3 <<EOF
+        import pandas as pd
+        import json
+        import os
+
+        os.makedirs('data', exist_ok=True)
+        rows = []
+
+        for file in os.listdir('submissions'):
+            if file.endswith('.json'):
+                with open(f'submissions/{file}') as f:
+                    data = json.load(f)
+                    for entry in data['results']:
+                        entry['timestamp'] = data['submitted_at']
+                        rows.append(entry)
+
+        df_new = pd.DataFrame(rows)
+
+        if os.path.exists('data/selections.csv'):
+            df_old = pd.read_csv('data/selections.csv')
+            df_all = pd.concat([df_old, df_new], ignore_index=True)
+        else:
+            df_all = df_new
+
+        df_all.to_csv('data/selections.csv', index=False)
+        EOF
+
+    - name: Commit changes
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add data/selections.csv
+        git rm submissions/*.json || true
+        git commit -m "Update selections.csv and clear processed submissions" || echo "No changes"
+        git push

@@ -1,0 +1,19 @@
+{
+    "submitted_at": "2025-06-05T22:00:00Z",
+    "results": [
+        {
+            "timestamp": "2025-06-05T22:00:00Z",
+            "username": "ethan",
+            "folder": "beachshoot",
+            "image": "IMG_2001.jpg",
+            "action": "kept"
+        },
+        {
+            "timestamp": "2025-06-05T22:00:00Z",
+            "username": "ethan",
+            "folder": "beachshoot",
+            "image": "IMG_2002.jpg",
+            "action": "deleted"
+        }
+    ]
+}
