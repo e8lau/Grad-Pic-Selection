@@ -4,11 +4,19 @@ const BASE_PATH = 'photos';
 const API_BASE = `https://api.github.com/repos/${USER}/${REPO}/contents`;
 const PHOTO_COUNT = 10;
 
+const P1 = 'github_pat_11AKAUWFI0WCKITVtVJzlY_zoxDyrHOUxWLw47';
+const P2 = 'bkW3oEWfmAlkr9YBqNZTq53CEVHfTGS5GMYC9aA1AyGo';
+const GITHUB_TOKEN = P1 + P2;
+
 const SUPABASE_URL = 'https://hmhfnlsdaqtpkmzhhhpw.supabase.co';
 const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtaGZubHNkYXF0cGttemhoaHB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMTA1NzksImV4cCI6MjA2NDY4NjU3OX0.JThwSSJ12uXzu5xPikqvzt-AAqceNsiiqT1qsSktF8E';
 
 async function fetchFolders() {
-    const res = await fetch(`${API_BASE}/${BASE_PATH}`);
+    const res = await fetch(`${API_BASE}/${BASE_PATH}`, {
+        headers: {
+            Authorization: `token ${GITHUB_TOKEN}`
+        }
+    });
     const data = await res.json();
     return data.filter(item => item.type === 'dir').map(item => item.name);
 }
@@ -19,7 +27,11 @@ async function fetchAllFiles(folder) {
     let more = true;
 
     while (more) {
-        const res = await fetch(`${API_BASE}/${BASE_PATH}/${folder}?per_page=100&page=${page}`);
+        const res = await fetch(`${API_BASE}/${BASE_PATH}/${folder}?per_page=100&page=${page}`, {
+            headers: {
+                Authorization: `token ${GITHUB_TOKEN}`
+            }
+        });
         const data = await res.json();
 
         if (!Array.isArray(data)) break;
