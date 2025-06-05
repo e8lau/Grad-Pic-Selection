@@ -1,0 +1,56 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+h1 {
+    margin-bottom: 1rem;
+}
+
+#username {
+    margin-left: 0.5rem;
+}
+
+#photo-counter {
+    margin: 1rem 0;
+    font-weight: bold;
+}
+
+#photo-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.photo-entry {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    background: white;
+    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.1);
+    max-width: 200px;
+    text-align: center;
+}
+
+.review-photo {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+button[type="submit"] {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+button[type="submit"]:hover {
+    background-color: #45a049;
+}

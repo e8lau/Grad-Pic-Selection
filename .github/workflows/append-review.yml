@@ -1,0 +1,29 @@
+name: Append Photo Review Log
+
+on:
+  workflow_dispatch:
+    inputs:
+      review_data:
+        description: 'JSON payload of photo review results'
+        required: true
+
+jobs:
+  append_csv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Append review data to CSV
+        run: |
+          echo "Processing input JSON..."
+          echo "${{ github.event.inputs.review_data }}" > review.json
+          cat review.json | jq -r '.[] | [.username, .filename, .status, .timestamp] | @csv' >> data/review_log.csv
+
+      - name: Commit changes
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add data/review_log.csv
+          git commit -m "Append review log" || echo "No changes to commit"
+          git push
