@@ -16,7 +16,13 @@
             <input list="usernames" id="username" name="username" autocomplete="off" required />
             <datalist id="usernames"></datalist>
         </div>
-        <div id="photo-counter">Remaining kept images: <span id="kept-count">...</span></div>
+        <div id="photo-counter">Remaining images from this angle: <span id="kept-count">...</span></div>
+
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="progress-count">0 / 0 reviewed</div>
+
         <div id="photo-container"></div>
         <button type="submit">Submit</button>
     </form>

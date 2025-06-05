@@ -54,3 +54,48 @@ button[type="submit"] {
 button[type="submit"]:hover {
     background-color: #45a049;
 }
+
+/* Base photo styling */
+.review-photo {
+    border: 3px solid transparent;
+    border-radius: 8px;
+    transition: border 0.2s ease;
+}
+
+/* Yellow on hover */
+.photo-entry:hover .review-photo {
+    border-color: yellow !important;
+}
+
+/* Green when selected */
+.photo-entry input[type="checkbox"]:checked+.review-photo {
+    border-color: limegreen;
+}
+
+/* Red when deselected */
+.photo-entry input[type="checkbox"]:not(:checked)+.review-photo {
+    border-color: red;
+}
+
+/* PROGRESS BAR */
+#progress-container {
+    width: 100%;
+    height: 20px;
+    background-color: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+#progress-bar {
+    height: 100%;
+    width: 0%;
+    background-color: limegreen;
+    transition: width 0.3s ease;
+}
+
+#progress-count {
+    font-weight: bold;
+    text-align: right;
+    margin-bottom: 1rem;
+}

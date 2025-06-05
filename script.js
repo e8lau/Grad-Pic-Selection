@@ -68,14 +68,23 @@ function renderPhotos(photoObjects) {
     const container = document.getElementById('photo-container');
     container.innerHTML = '';
     photoObjects.forEach((photo, index) => {
-        const label = document.createElement('label');
-        label.innerHTML = `
-      <div class="photo-entry">
-        <input type="checkbox" name="photo-${index}" value="${photo.filename}" checked>
-        <img src="${photo.url}" alt="photo" class="review-photo">
-      </div>
-    `;
-        container.appendChild(label);
+        const div = document.createElement('div');
+        div.className = 'photo-entry';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.name = `photo-${index}`;
+        checkbox.value = photo.filename;
+        checkbox.checked = true;
+
+        const img = document.createElement('img');
+        img.src = photo.url;
+        img.alt = 'photo';
+        img.className = 'review-photo';
+
+        div.appendChild(checkbox);
+        div.appendChild(img);
+        container.appendChild(div);
     });
 }
 
@@ -164,10 +173,41 @@ async function populateUsernameSuggestions() {
     console.log('Username suggestions loaded:', usernames);
 }
 
+async function updateProgressBar(username) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename&username=eq.${username}`, {
+        headers: {
+            'apikey': SUPABASE_API_KEY,
+            'Authorization': `Bearer ${SUPABASE_API_KEY}`
+        }
+    });
+    const data = await res.json();
+    const reviewed = new Set(data.map(d => d.filename));
+
+    const foldersRes = await fetch(`${API_BASE}/${BASE_PATH}`, {
+        headers: { Authorization: `token ${GITHUB_TOKEN}` }
+    });
+    const folders = await foldersRes.json();
+    let total = 0;
+
+    for (const folder of folders.filter(f => f.type === 'dir')) {
+        const contents = await fetch(`${API_BASE}/${BASE_PATH}/${folder.name}`, {
+            headers: { Authorization: `token ${GITHUB_TOKEN}` }
+        }).then(r => r.json());
+        total += contents.filter(i => /\.(jpg|jpeg|png)$/i.test(i.name)).length;
+    }
+
+    const percent = total ? (reviewed.size / total) * 100 : 0;
+
+    document.getElementById('progress-bar').style.width = `${percent}%`;
+    document.getElementById('progress-count').textContent = `${reviewed.size} / ${total} reviewed`;
+}
+
 async function loadPhotosForUser(username) {
     if (!username) {
         document.getElementById('photo-container').innerHTML = '<p>Please enter a username to begin reviewing.</p>';
         document.getElementById('kept-count').textContent = '';
+        document.getElementById('progress-bar').style.width = '0%';
+        document.getElementById('progress-count').textContent = '0 / 0 reviewed';
         return;
     }
 
@@ -177,15 +217,14 @@ async function loadPhotosForUser(username) {
     const allPhotos = await fetchAllFiles(randomFolder);
     const deletedSet = await getUserDeletedFilenames(randomFolder, username);
 
-    console.log(`Total photos in folder '${randomFolder}':`, allPhotos.length);
-
     const filteredPhotos = allPhotos.filter(p => !deletedSet.has(p.filename));
-    console.log(`Photos remaining after filtering for ${username}:`, filteredPhotos.map(p => p.filename));
-
     const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT);
 
     renderPhotos(selectedPhotos);
     document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining images to review`;
+
+    // ✅ Update the progress bar
+    await updateProgressBar(username);
 }
 
 window.onload = async function () {
