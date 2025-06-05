@@ -183,8 +183,8 @@ async function populateUsernameSuggestions() {
 }
 
 async function updateProgressBar(username, reviewedSet = null) {
+    // 1. If no reviewedSet is passed, fetch it from Supabase
     if (!reviewedSet) {
-        console.log('no review set');
         const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename&username=eq.${username}`, {
             headers: {
                 'apikey': SUPABASE_API_KEY,
@@ -195,19 +195,48 @@ async function updateProgressBar(username, reviewedSet = null) {
         reviewedSet = new Set(data.map(d => d.filename));
     }
 
-    const foldersRes = await fetch(`${API_BASE}/${BASE_PATH}`, {
-        headers: { Authorization: `token ${GITHUB_TOKEN}` }
-    });
-    const folders = await foldersRes.json();
     let total = 0;
 
-    for (const folder of folders.filter(f => f.type === 'dir')) {
-        const contents = await fetch(`${API_BASE}/${BASE_PATH}/${folder.name}`, {
+    // 2. Try to fetch precomputed photo count from counts/photo_counts.json
+    try {
+        const res = await fetch('counts/photo_counts.json');
+
+        if (!res.ok) throw new Error('photo_counts.json not found');
+
+        const json = await res.json();
+        total = json.total;
+
+        console.log('✅ Loaded precomputed total image count:', total);
+    } catch (error) {
+        console.warn('⚠️ Falling back to manual GitHub image counting:', error.message);
+
+        // 3. Fallback: manually compute total image count from all photo folders
+        const foldersRes = await fetch(`${API_BASE}/${BASE_PATH}`, {
             headers: { Authorization: `token ${GITHUB_TOKEN}` }
-        }).then(r => r.json());
-        total += contents.filter(i => /\.(jpg|jpeg|png)$/i.test(i.name)).length;
+        });
+        const folders = await foldersRes.json();
+
+        for (const folder of folders.filter(f => f.type === 'dir')) {
+            let page = 1;
+            let more = true;
+
+            while (more) {
+                const contentsRes = await fetch(`${API_BASE}/${BASE_PATH}/${folder.name}?per_page=100&page=${page}`, {
+                    headers: { Authorization: `token ${GITHUB_TOKEN}` }
+                });
+                const contents = await contentsRes.json();
+                if (!Array.isArray(contents)) break;
+
+                total += contents.filter(f => /\.(jpg|jpeg|png)$/i.test(f.name)).length;
+                more = contents.length === 100;
+                page++;
+            }
+        }
+
+        console.log('📊 Manually computed total image count:', total);
     }
 
+    // 4. Update the progress bar UI
     const percent = total ? (reviewedSet.size / total) * 100 : 0;
 
     document.getElementById('progress-bar').style.width = `${percent}%`;
