@@ -34,13 +34,13 @@ async function fetchAllFiles(folder) {
     }
 
     return allFiles.map(file => ({
-        filename: `public/photos/${folder}/${file.name}`,
+        filename: `photos/${folder}/${file.name}`,
         url: file.download_url
     }));
 }
 
 async function getUserDeletedFilenames(folder, username) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename,status&filename=like.public/photos/${folder}%25&username=eq.${username}`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename,status&filename=like.photos/${folder}%25&username=eq.${username}`, {
         headers: {
             'apikey': SUPABASE_API_KEY,
             'Authorization': `Bearer ${SUPABASE_API_KEY}`
@@ -112,7 +112,37 @@ document.getElementById('photo-review-form').addEventListener('submit', async fu
     window.location.reload();
 });
 
+async function populateUsernameSuggestions() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=username`, {
+        headers: {
+            'apikey': SUPABASE_API_KEY,
+            'Authorization': `Bearer ${SUPABASE_API_KEY}`
+        }
+    });
+
+    if (!res.ok) {
+        console.error("Failed to fetch usernames", await res.text());
+        return;
+    }
+
+    const data = await res.json();
+    const usernames = [...new Set(data.map(d => d.username))];
+
+    const datalist = document.getElementById('usernames');
+    datalist.innerHTML = '';
+
+    usernames.forEach(username => {
+        const option = document.createElement('option');
+        option.value = username;
+        datalist.appendChild(option);
+    });
+
+    console.log('Username suggestions loaded:', usernames);
+}
+
 async function init() {
+    await populateUsernameSuggestions();
+
     const username = document.getElementById('username').value;
     const folders = await fetchFolders();
     const randomFolder = folders[Math.floor(Math.random() * folders.length)];
