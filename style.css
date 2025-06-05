@@ -55,6 +55,12 @@ button[type="submit"]:hover {
     background-color: #45a049;
 }
 
+.photo-view-count {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
 /* Base photo styling */
 .review-photo {
     border: 3px solid transparent;

@@ -70,10 +70,15 @@ async function getUserReviewData(username) {
     const data = await res.json();
     const deletedSet = new Set(data.filter(d => d.status === 'deleted').map(d => d.filename));
     const reviewedSet = new Set(data.map(d => d.filename));
-    return { deletedSet, reviewedSet };
+
+    const viewCount = {};
+    data.forEach(d => {
+        viewCount[d.filename] = (viewCount[d.filename] || 0) + 1;
+    });
+    return { deletedSet, reviewedSet, viewCount };
 }
 
-function renderPhotos(photoObjects) {
+function renderPhotos(photoObjects, viewCount = {}) {
     const container = document.getElementById('photo-container');
     container.innerHTML = '';
     photoObjects.forEach((photo, index) => {
@@ -91,8 +96,14 @@ function renderPhotos(photoObjects) {
         img.alt = 'photo';
         img.className = 'review-photo';
 
+        const count = viewCount[photo.filename] || 0;
+        const countLabel = document.createElement('div');
+        countLabel.className = 'photo-view-count';
+        countLabel.textContent = `Viewed ${count} times`;
+
         div.appendChild(checkbox);
         div.appendChild(img);
+        div.appendChild(countLabel);
         container.appendChild(div);
     });
 }
@@ -256,13 +267,13 @@ async function loadPhotosForUser(username) {
     const randomFolder = folders[Math.floor(Math.random() * folders.length)];
 
     const allPhotos = await fetchAllFiles(randomFolder);
-    const { deletedSet, reviewedSet } = await getUserReviewData(username);
+    const { deletedSet, reviewedSet, viewCount } = await getUserReviewData(username);
 
     const filteredPhotos = allPhotos.filter(p => !deletedSet.has(p.filename));
     const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT);
 
-    renderPhotos(selectedPhotos);
-    document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining images to review`;
+    renderPhotos(selectedPhotos, viewCount);
+    document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining`;
 
     // ✅ Update the progress bar
     await updateProgressBar(username, reviewedSet);
