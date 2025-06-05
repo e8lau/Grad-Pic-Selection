@@ -22,15 +22,20 @@ async function fetchFolders() {
 }
 
 async function fetchAllFiles(folder) {
+    const cacheKey = `photo-files-${folder}`;
+    const cached = localStorage.getItem(cacheKey);
+
+    if (cached) {
+        return JSON.parse(cached);
+    }
+
     let page = 1;
     let allFiles = [];
     let more = true;
 
     while (more) {
         const res = await fetch(`${API_BASE}/${BASE_PATH}/${folder}?per_page=100&page=${page}`, {
-            headers: {
-                Authorization: `token ${GITHUB_TOKEN}`
-            }
+            headers: { Authorization: `token ${GITHUB_TOKEN}` }
         });
         const data = await res.json();
 
@@ -45,23 +50,27 @@ async function fetchAllFiles(folder) {
         page++;
     }
 
-    return allFiles.map(file => ({
+    const result = allFiles.map(file => ({
         filename: `photos/${folder}/${file.name}`,
         url: file.download_url
     }));
+
+    localStorage.setItem(cacheKey, JSON.stringify(result));
+    return result;
 }
 
-async function getUserDeletedFilenames(folder, username) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename,status&filename=like.photos/${folder}%25&username=eq.${username}`, {
+async function getUserReviewData(username) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename,status&username=eq.${username}`, {
         headers: {
             'apikey': SUPABASE_API_KEY,
             'Authorization': `Bearer ${SUPABASE_API_KEY}`
         }
     });
+
     const data = await res.json();
-    const deletedFilenames = new Set(data.filter(d => d.status === 'deleted').map(d => d.filename));
-    console.log(`Deleted files for ${username} in ${folder}:`, [...deletedFilenames]);
-    return deletedFilenames;
+    const deletedSet = new Set(data.filter(d => d.status === 'deleted').map(d => d.filename));
+    const reviewedSet = new Set(data.map(d => d.filename));
+    return { deletedSet, reviewedSet };
 }
 
 function renderPhotos(photoObjects) {
@@ -173,15 +182,18 @@ async function populateUsernameSuggestions() {
     console.log('Username suggestions loaded:', usernames);
 }
 
-async function updateProgressBar(username) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename&username=eq.${username}`, {
-        headers: {
-            'apikey': SUPABASE_API_KEY,
-            'Authorization': `Bearer ${SUPABASE_API_KEY}`
-        }
-    });
-    const data = await res.json();
-    const reviewed = new Set(data.map(d => d.filename));
+async function updateProgressBar(username, reviewedSet = null) {
+    if (!reviewedSet) {
+        console.log('no review set');
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename&username=eq.${username}`, {
+            headers: {
+                'apikey': SUPABASE_API_KEY,
+                'Authorization': `Bearer ${SUPABASE_API_KEY}`
+            }
+        });
+        const data = await res.json();
+        reviewedSet = new Set(data.map(d => d.filename));
+    }
 
     const foldersRes = await fetch(`${API_BASE}/${BASE_PATH}`, {
         headers: { Authorization: `token ${GITHUB_TOKEN}` }
@@ -196,10 +208,10 @@ async function updateProgressBar(username) {
         total += contents.filter(i => /\.(jpg|jpeg|png)$/i.test(i.name)).length;
     }
 
-    const percent = total ? (reviewed.size / total) * 100 : 0;
+    const percent = total ? (reviewedSet.size / total) * 100 : 0;
 
     document.getElementById('progress-bar').style.width = `${percent}%`;
-    document.getElementById('progress-count').textContent = `${reviewed.size} / ${total} reviewed`;
+    document.getElementById('progress-count').textContent = `${reviewedSet.size} / ${total} reviewed`;
 }
 
 async function loadPhotosForUser(username) {
@@ -215,7 +227,7 @@ async function loadPhotosForUser(username) {
     const randomFolder = folders[Math.floor(Math.random() * folders.length)];
 
     const allPhotos = await fetchAllFiles(randomFolder);
-    const deletedSet = await getUserDeletedFilenames(randomFolder, username);
+    const { deletedSet, reviewedSet } = await getUserReviewData(username);
 
     const filteredPhotos = allPhotos.filter(p => !deletedSet.has(p.filename));
     const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT);
@@ -224,7 +236,7 @@ async function loadPhotosForUser(username) {
     document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining images to review`;
 
     // ✅ Update the progress bar
-    await updateProgressBar(username);
+    await updateProgressBar(username, reviewedSet);
 }
 
 window.onload = async function () {
@@ -241,5 +253,9 @@ window.onload = async function () {
 };
 
 function shuffleArray(array) {
-    return array.sort(() => Math.random() - 0.5);
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }
