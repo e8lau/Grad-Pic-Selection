@@ -10,13 +10,13 @@
 
 <body>
     <h1>Photoshoot Review Tool</h1>
-    <div>
-        <label for="username">Select Username:</label>
-        <input list="usernames" id="username" name="username" autocomplete="off" />
-        <datalist id="usernames"></datalist>
-    </div>
-    <div id="photo-counter">Remaining kept images: <span id="kept-count">...</span></div>
     <form id="photo-review-form">
+        <div>
+            <label for="username">Select Username:</label>
+            <input list="usernames" id="username" name="username" autocomplete="off" required />
+            <datalist id="usernames"></datalist>
+        </div>
+        <div id="photo-counter">Remaining kept images: <span id="kept-count">...</span></div>
         <div id="photo-container"></div>
         <button type="submit">Submit</button>
     </form>

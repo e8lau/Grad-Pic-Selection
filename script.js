@@ -106,22 +106,34 @@ async function submitReviews(username, reviews) {
     }
 }
 
-function updateKeptCounter() {
-    document.getElementById('kept-count').textContent = 'loading...';
-}
+document.getElementById('username').addEventListener('change', async function (event) {
+    const username = event.target.value.trim();
+    if (username) {
+        localStorage.setItem('photoshoot-review-username', username);
+        await loadPhotosForUser(username);
+    }
+});
 
 document.getElementById('photo-review-form').addEventListener('submit', async function (event) {
     event.preventDefault();
-    const username = document.getElementById('username').value;
-    const inputs = document.querySelectorAll('input[type="checkbox"]');
+    const usernameInput = document.getElementById('username');
+    const username = usernameInput.value.trim();
 
+    if (!username) {
+        alert('Please enter a username.');
+        return;
+    }
+
+    localStorage.setItem('photoshoot-review-username', username);
+
+    const inputs = document.querySelectorAll('input[type="checkbox"]');
     const results = Array.from(inputs).map(input => ({
         filename: input.value,
         status: input.checked ? 'kept' : 'deleted'
     }));
 
     await submitReviews(username, results);
-    window.location.reload();
+    await loadPhotosForUser(username);
 });
 
 async function populateUsernameSuggestions() {
@@ -152,10 +164,13 @@ async function populateUsernameSuggestions() {
     console.log('Username suggestions loaded:', usernames);
 }
 
-async function init() {
-    await populateUsernameSuggestions();
+async function loadPhotosForUser(username) {
+    if (!username) {
+        document.getElementById('photo-container').innerHTML = '<p>Please enter a username to begin reviewing.</p>';
+        document.getElementById('kept-count').textContent = '';
+        return;
+    }
 
-    const username = document.getElementById('username').value;
     const folders = await fetchFolders();
     const randomFolder = folders[Math.floor(Math.random() * folders.length)];
 
@@ -170,11 +185,22 @@ async function init() {
     const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT);
 
     renderPhotos(selectedPhotos);
-    updateKeptCounter();
+    document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining images to review`;
 }
+
+window.onload = async function () {
+    await populateUsernameSuggestions();
+
+    const storedUsername = localStorage.getItem('photoshoot-review-username');
+    const usernameInput = document.getElementById('username');
+
+    if (storedUsername) {
+        usernameInput.value = storedUsername;
+    }
+
+    await loadPhotosForUser(storedUsername);
+};
 
 function shuffleArray(array) {
     return array.sort(() => Math.random() - 0.5);
 }
-
-window.onload = init;
