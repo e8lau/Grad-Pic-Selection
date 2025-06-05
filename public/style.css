@@ -3,26 +3,18 @@ body {
     padding: 20px;
 }
 
-#photo-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 20px;
+.photo-block {
+    display: inline-block;
+    margin: 10px;
+    text-align: center;
 }
 
-.photo {
-    position: relative;
+img {
+    display: block;
+    margin-bottom: 5px;
 }
 
-.photo img {
-    max-width: 150px;
-    height: auto;
-    border: 2px solid #ccc;
-    border-radius: 4px;
-}
-
-.selector {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 5px;
+#counter {
+    margin-top: 10px;
+    font-weight: bold;
 }
