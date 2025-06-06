@@ -193,18 +193,15 @@ async function populateUsernameSuggestions() {
     console.log('Username suggestions loaded:', usernames);
 }
 
-async function updateProgressBar(username, reviewedSet = null) {
-    // 1. If no reviewedSet is passed, fetch it from Supabase
-    if (!reviewedSet) {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename&username=eq.${username}`, {
-            headers: {
-                'apikey': SUPABASE_API_KEY,
-                'Authorization': `Bearer ${SUPABASE_API_KEY}`
-            }
-        });
-        const data = await res.json();
-        reviewedSet = new Set(data.map(d => d.filename));
-    }
+async function updateProgressBar(username, reviewedSet) {
+    const globalRes = await fetch(`${SUPABASE_URL}/rest/v1/global_review_counter?select=reviewed_count`, {
+        headers: {
+            'apikey': SUPABASE_API_KEY,
+            'Authorization': `Bearer ${SUPABASE_API_KEY}`
+        }
+    });
+    const data = await globalRes.json();
+    const globalReviewCount = data.length > 0 ? data[0].reviewed_count : null;
 
     let total = 0;
 
@@ -249,9 +246,13 @@ async function updateProgressBar(username, reviewedSet = null) {
 
     // 4. Update the progress bar UI
     const percent = total ? (reviewedSet.size / total) * 100 : 0;
+    const globalPercent = total ? (globalReviewCount / total) * 100 : 0;
 
-    document.getElementById('progress-bar').style.width = `${percent}%`;
-    document.getElementById('progress-count').textContent = `${reviewedSet.size} / ${total} reviewed`;
+    document.getElementById('progress-bar').style.transform = `scaleX(${1 - percent / 100})`;
+    document.getElementById('progress-count').textContent = `You have reviewed ${reviewedSet.size} / ${total}`;
+
+    document.getElementById('global-progress-bar').style.transform = `scaleX(${1 - globalPercent / 100})`;
+    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalReviewCount} / ${total}`;
 }
 
 async function loadPhotosForUser(username) {
