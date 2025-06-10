@@ -138,10 +138,6 @@ function renderPhotoGrid(deletionCounts = {}, adminDeletedSet = new Set()) {
     const grid = document.getElementById('photo-grid');
     grid.innerHTML = '';
 
-    const folderFilter = document.getElementById('folder-filter').value;
-    const statusFilter = document.getElementById('status-filter').value;
-    const sortOrder = document.getElementById('sort-order').value;
-
     filteredPhotos = getFilteredPhotos(); // <-- update global filteredPhotos
 
     const startIndex = (currentPage - 1) * PHOTOS_PER_PAGE;

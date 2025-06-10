@@ -213,14 +213,14 @@ async function populateUsernameSuggestions() {
 }
 
 async function updateProgressBar(username, reviewedSet) {
-    const globalRes = await fetch(`${SUPABASE_URL}/rest/v1/global_review_counter?select=reviewed_count`, {
+    const allReviewsRes = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename`, {
         headers: {
             'apikey': SUPABASE_API_KEY,
             'Authorization': `Bearer ${SUPABASE_API_KEY}`
         }
     });
-    const data = await globalRes.json();
-    const globalReviewCount = data.length > 0 ? data[0].reviewed_count : null;
+    const allReviews = await allReviewsRes.json();
+    const uniqueReviewed = new Set(allReviews.map(r => r.filename));
 
     let total = 0;
 
@@ -271,17 +271,17 @@ async function updateProgressBar(username, reviewedSet) {
     const userReviewedVisible = Array.from(reviewedSet).filter(f => !adminDeletedSet.has(f)).length;
 
     // 3. You may also want to adjust the global count similarly (optional)
-    const globalVisibleReviewed = globalReviewCount; // Or adjust if you ever want to exclude admin-hidden ones globally too
+    const globalVisibleReviewed = Array.from(uniqueReviewed).filter(f => !adminDeletedSet.has(f)).length;
 
     // 4. Calculate progress percentages
     const percent = totalVisible ? (userReviewedVisible / totalVisible) * 100 : 0;
-    const globalPercent = total ? (globalVisibleReviewed / total) * 100 : 0;
+    const globalPercent = total ? (globalVisibleReviewed / totalVisible) * 100 : 0;
 
     document.getElementById('progress-bar').style.transform = `scaleX(${1 - percent / 100})`;
     document.getElementById('progress-count').textContent = `You have reviewed ${userReviewedVisible} / ${totalVisible} visible photos`;
 
     document.getElementById('global-progress-bar').style.transform = `scaleX(${1 - globalPercent / 100})`;
-    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalVisibleReviewed} / ${total}`;
+    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalVisibleReviewed} / ${totalVisible}`;
 }
 
 async function loadPhotosForUser(username) {
