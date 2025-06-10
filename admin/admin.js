@@ -108,6 +108,32 @@ async function fetchAllFiles(folder) {
     return allFiles;
 }
 
+function getFilteredPhotos() {
+    const folderFilter = document.getElementById('folder-filter').value;
+    const statusFilter = document.getElementById('status-filter').value;
+    const sortOrder = document.getElementById('sort-order').value;
+
+    let result = [...allPhotos];
+
+    if (folderFilter !== 'all') {
+        result = result.filter(p => p.folder === folderFilter);
+    }
+
+    if (statusFilter === 'deleted') {
+        result = result.filter(p => adminDeletedSet.has(p.filename));
+    } else if (statusFilter === 'active') {
+        result = result.filter(p => !adminDeletedSet.has(p.filename));
+    }
+
+    if (sortOrder === 'filename') {
+        result.sort((a, b) => a.filename.localeCompare(b.filename));
+    } else if (sortOrder === 'deletedCount') {
+        result.sort((a, b) => (deletionCounts[b.filename] || 0) - (deletionCounts[a.filename] || 0));
+    }
+
+    return result;
+}
+
 function renderPhotoGrid(deletionCounts = {}, adminDeletedSet = new Set()) {
     const grid = document.getElementById('photo-grid');
     grid.innerHTML = '';
@@ -116,26 +142,7 @@ function renderPhotoGrid(deletionCounts = {}, adminDeletedSet = new Set()) {
     const statusFilter = document.getElementById('status-filter').value;
     const sortOrder = document.getElementById('sort-order').value;
 
-    let filteredPhotos = allPhotos;
-
-    // Filter by folder
-    if (folderFilter !== 'all') {
-        filteredPhotos = filteredPhotos.filter(p => p.folder === folderFilter);
-    }
-
-    // Filter by admin-deleted status
-    if (statusFilter === 'deleted') {
-        filteredPhotos = filteredPhotos.filter(p => adminDeletedSet.has(p.filename));
-    } else if (statusFilter === 'active') {
-        filteredPhotos = filteredPhotos.filter(p => !adminDeletedSet.has(p.filename));
-    }
-
-    // Sort
-    if (sortOrder === 'filename') {
-        filteredPhotos.sort((a, b) => a.filename.localeCompare(b.filename));
-    } else if (sortOrder === 'deletedCount') {
-        filteredPhotos.sort((a, b) => (deletionCounts[b.filename] || 0) - (deletionCounts[a.filename] || 0));
-    }
+    filteredPhotos = getFilteredPhotos(); // <-- update global filteredPhotos
 
     const startIndex = (currentPage - 1) * PHOTOS_PER_PAGE;
     const pagePhotos = filteredPhotos.slice(startIndex, startIndex + PHOTOS_PER_PAGE);
@@ -192,7 +199,7 @@ function renderPaginationControls() {
     const container = document.getElementById('pagination-controls');
     container.innerHTML = '';
 
-    const totalPages = Math.ceil(allPhotos.length / PHOTOS_PER_PAGE);
+    const totalPages = Math.ceil(filteredPhotos.length / PHOTOS_PER_PAGE);
 
     const prevBtn = document.createElement('button');
     prevBtn.textContent = '⟵ Previous';
@@ -307,18 +314,21 @@ async function submitAdminChanges(status) {
 // Phase 7 Listeners
 document.getElementById('folder-filter').addEventListener('change', () => {
     currentPage = 1;
+    filteredPhotos = getFilteredPhotos();
     renderPhotoGrid(deletionCounts, adminDeletedSet);
     renderPaginationControls();
 });
 
 document.getElementById('status-filter').addEventListener('change', () => {
     currentPage = 1;
+    filteredPhotos = getFilteredPhotos();
     renderPhotoGrid(deletionCounts, adminDeletedSet);
     renderPaginationControls();
 });
 
 document.getElementById('sort-order').addEventListener('change', () => {
     currentPage = 1;
+    filteredPhotos = getFilteredPhotos();
     renderPhotoGrid(deletionCounts, adminDeletedSet);
     renderPaginationControls();
 });
