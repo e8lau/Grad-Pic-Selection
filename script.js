@@ -275,13 +275,13 @@ async function updateProgressBar(username, reviewedSet) {
 
     // 4. Calculate progress percentages
     const percent = totalVisible ? (userReviewedVisible / totalVisible) * 100 : 0;
-    const globalPercent = total ? (globalVisibleReviewed / total) * 100 : 0;
+    const globalPercent = total ? (globalVisibleReviewed / totalVisible) * 100 : 0;
 
     document.getElementById('progress-bar').style.transform = `scaleX(${1 - percent / 100})`;
     document.getElementById('progress-count').textContent = `You have reviewed ${userReviewedVisible} / ${totalVisible} visible photos`;
 
     document.getElementById('global-progress-bar').style.transform = `scaleX(${1 - globalPercent / 100})`;
-    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalVisibleReviewed} / ${total}`;
+    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalVisibleReviewed} / ${totalVisible}`;
 }
 
 async function loadPhotosForUser(username) {
