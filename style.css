@@ -115,3 +115,7 @@ button[type="submit"]:hover {
     text-align: right;
     margin-bottom: 1rem;
 }
+
+.photo-entry input[type="checkbox"]:checked+.review-photo {
+    border-color: limegreen;
+}

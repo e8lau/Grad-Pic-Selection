@@ -11,6 +11,9 @@ const GITHUB_TOKEN = P1 + P2;
 const SUPABASE_URL = 'https://hmhfnlsdaqtpkmzhhhpw.supabase.co';
 const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtaGZubHNkYXF0cGttemhoaHB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMTA1NzksImV4cCI6MjA2NDY4NjU3OX0.JThwSSJ12uXzu5xPikqvzt-AAqceNsiiqT1qsSktF8E';
 
+// Global Vars
+let adminDeletedSet = new Set();
+
 async function fetchFolders() {
     const res = await fetch(`${API_BASE}/${BASE_PATH}`, {
         headers: {
@@ -59,6 +62,18 @@ async function fetchAllFiles(folder) {
     return result;
 }
 
+async function fetchAdminDeletedSet() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/admin_reviews?select=filename,status`, {
+        headers: {
+            'apikey': SUPABASE_API_KEY,
+            'Authorization': `Bearer ${SUPABASE_API_KEY}`
+        }
+    });
+
+    const data = await res.json();
+    adminDeletedSet = new Set(data.filter(d => d.status === 'deleted').map(d => d.filename));
+}
+
 async function getUserReviewData(username) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename,status&username=eq.${username}`, {
         headers: {
@@ -68,13 +83,17 @@ async function getUserReviewData(username) {
     });
 
     const data = await res.json();
-    const deletedSet = new Set(data.filter(d => d.status === 'deleted').map(d => d.filename));
-    const reviewedSet = new Set(data.map(d => d.filename));
+    const deletedSet = new Set(adminDeletedSet); // start with admin-deleted
 
+    const reviewedSet = new Set();
     const viewCount = {};
+
     data.forEach(d => {
+        reviewedSet.add(d.filename);
         viewCount[d.filename] = (viewCount[d.filename] || 0) + 1;
+        if (d.status === 'deleted') deletedSet.add(d.filename);
     });
+
     return { deletedSet, reviewedSet, viewCount };
 }
 
@@ -245,14 +264,24 @@ async function updateProgressBar(username, reviewedSet) {
     }
 
     // 4. Update the progress bar UI
-    const percent = total ? (reviewedSet.size / total) * 100 : 0;
-    const globalPercent = total ? (globalReviewCount / total) * 100 : 0;
+    // 1. Adjust total to exclude admin-deleted photos
+    const totalVisible = total - adminDeletedSet.size;
+
+    // 2. Filter out admin-deleted files from user-reviewed set
+    const userReviewedVisible = Array.from(reviewedSet).filter(f => !adminDeletedSet.has(f)).length;
+
+    // 3. You may also want to adjust the global count similarly (optional)
+    const globalVisibleReviewed = globalReviewCount; // Or adjust if you ever want to exclude admin-hidden ones globally too
+
+    // 4. Calculate progress percentages
+    const percent = totalVisible ? (userReviewedVisible / totalVisible) * 100 : 0;
+    const globalPercent = total ? (globalVisibleReviewed / total) * 100 : 0;
 
     document.getElementById('progress-bar').style.transform = `scaleX(${1 - percent / 100})`;
-    document.getElementById('progress-count').textContent = `You have reviewed ${reviewedSet.size} / ${total}`;
+    document.getElementById('progress-count').textContent = `You have reviewed ${userReviewedVisible} / ${totalVisible} visible photos`;
 
     document.getElementById('global-progress-bar').style.transform = `scaleX(${1 - globalPercent / 100})`;
-    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalReviewCount} / ${total}`;
+    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalVisibleReviewed} / ${total}`;
 }
 
 async function loadPhotosForUser(username) {
@@ -290,6 +319,7 @@ window.onload = async function () {
         usernameInput.value = storedUsername;
     }
 
+    await fetchAdminDeletedSet();
     await loadPhotosForUser(storedUsername);
 };
 

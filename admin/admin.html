@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel – Photo Filter</title>
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+        #login-section {
+            max-width: 300px;
+            margin: 5rem auto;
+            padding: 2rem;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #admin-panel {
+            display: none;
+            margin: 2rem;
+        }
+
+        .photo-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .photo-entry {
+            border: 1px solid #ccc;
+            padding: 0.5rem;
+            background: white;
+            max-width: 200px;
+            text-align: center;
+            position: relative;
+        }
+
+        .deleted-label {
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            color: #b30000;
+        }
+
+        .deleted-by-admin {
+            border: 3px solid red !important;
+        }
+
+        .bulk-action-bar {
+            margin-bottom: 1rem;
+        }
+
+        .bulk-action-bar button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="login-section">
+        <h2>Admin Login</h2>
+        <form id="login-form">
+            <label for="admin-username">Username:</label>
+            <input type="text" id="admin-username" required /><br /><br />
+            <label for="admin-password">Password:</label>
+            <input type="password" id="admin-password" required /><br /><br />
+            <button type="submit">Login</button>
+        </form>
+    </div>
+
+    <div id="admin-panel">
+        <h1>Admin – Global Photo Filter</h1>
+
+        <div class="bulk-action-bar">
+            <label for="folder-filter">Filter by Category:</label>
+            <select id="folder-filter">
+                <option value="all">All</option>
+            </select>
+
+            <label for="status-filter">Status:</label>
+            <select id="status-filter">
+                <option value="all">All</option>
+                <option value="deleted">Deleted by Admin</option>
+                <option value="active">Not Deleted</option>
+            </select>
+
+            <label for="sort-order">Sort by:</label>
+            <select id="sort-order">
+                <option value="none">None</option>
+                <option value="filename">Filename (A-Z)</option>
+                <option value="deletedCount">Most Deleted</option>
+            </select>
+
+            <br /><br />
+            <button id="mark-deleted">Mark Selected as Deleted</button>
+            <button id="restore-selected">Restore Selected</button>
+        </div>
+
+        <div class="photo-grid" id="photo-grid"></div>
+        <div id="pagination-controls" style="margin-top: 1rem; text-align: center;"></div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>
