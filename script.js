@@ -212,7 +212,20 @@ async function populateUsernameSuggestions() {
     console.log('Username suggestions loaded:', usernames);
 }
 
-async function updateProgressBar(username, reviewedSet) {
+async function updateProgressBar(reviewedSet) {
+    // 1. Load precomputed total image count
+    let total = 0;
+    try {
+        const res = await fetch('counts/photo_counts.json');
+        if (!res.ok) throw new Error('photo_counts.json not found');
+        const json = await res.json();
+        total = json.total;
+        console.log('✅ Loaded total image count:', total);
+    } catch (err) {
+        console.warn('⚠️ Could not load photo_counts.json:', err.message);
+    }
+
+    // 2. GLOBAL REVIEWED COUNT (exclude admin-hidden)
     const allReviewsRes = await fetch(`${SUPABASE_URL}/rest/v1/reviews?select=filename`, {
         headers: {
             'apikey': SUPABASE_API_KEY,
@@ -220,68 +233,33 @@ async function updateProgressBar(username, reviewedSet) {
         }
     });
     const allReviews = await allReviewsRes.json();
-    const uniqueReviewed = new Set(allReviews.map(r => r.filename));
+    const globalReviewedSet = new Set(allReviews.map(r => r.filename));
 
-    let total = 0;
+    // 3. FILTER sets to exclude admin-hidden
+    const userReviewedVisible = Array.from(reviewedSet).filter(f => !adminDeletedSet.has(f)).length;
+    const globalVisibleReviewed = Array.from(globalReviewedSet).filter(f => !adminDeletedSet.has(f)).length;
 
-    // 2. Try to fetch precomputed photo count from counts/photo_counts.json
-    try {
-        const res = await fetch('counts/photo_counts.json');
-
-        if (!res.ok) throw new Error('photo_counts.json not found');
-
-        const json = await res.json();
-        total = json.total;
-
-        console.log('✅ Loaded precomputed total image count:', total);
-    } catch (error) {
-        console.warn('⚠️ Falling back to manual GitHub image counting:', error.message);
-
-        // 3. Fallback: manually compute total image count from all photo folders
-        const foldersRes = await fetch(`${API_BASE}/${BASE_PATH}`, {
-            headers: { Authorization: `token ${GITHUB_TOKEN}` }
-        });
-        const folders = await foldersRes.json();
-
-        for (const folder of folders.filter(f => f.type === 'dir')) {
-            let page = 1;
-            let more = true;
-
-            while (more) {
-                const contentsRes = await fetch(`${API_BASE}/${BASE_PATH}/${folder.name}?per_page=100&page=${page}`, {
-                    headers: { Authorization: `token ${GITHUB_TOKEN}` }
-                });
-                const contents = await contentsRes.json();
-                if (!Array.isArray(contents)) break;
-
-                total += contents.filter(f => /\.(jpg|jpeg|png)$/i.test(f.name)).length;
-                more = contents.length === 100;
-                page++;
-            }
-        }
-
-        console.log('📊 Manually computed total image count:', total);
-    }
-
-    // 4. Update the progress bar UI
-    // 1. Adjust total to exclude admin-deleted photos
+    // 4. SAFEGUARDED totalVisible: only count photos ever reviewed
     const totalVisible = total - adminDeletedSet.size;
 
-    // 2. Filter out admin-deleted files from user-reviewed set
-    const userReviewedVisible = Array.from(reviewedSet).filter(f => !adminDeletedSet.has(f)).length;
-
-    // 3. You may also want to adjust the global count similarly (optional)
-    const globalVisibleReviewed = Array.from(uniqueReviewed).filter(f => !adminDeletedSet.has(f)).length;
-
-    // 4. Calculate progress percentages
+    // 5. Calculate percentages
     const percent = totalVisible ? (userReviewedVisible / totalVisible) * 100 : 0;
-    const globalPercent = total ? (globalVisibleReviewed / totalVisible) * 100 : 0;
+    const globalPercent = totalVisible ? (globalVisibleReviewed / totalVisible) * 100 : 0;
 
+    // 6. Update UI
     document.getElementById('progress-bar').style.transform = `scaleX(${1 - percent / 100})`;
-    document.getElementById('progress-count').textContent = `You have reviewed ${userReviewedVisible} / ${totalVisible} visible photos`;
+    document.getElementById('progress-count').textContent =
+        `You have reviewed ${userReviewedVisible} / ${totalVisible} visible photos`;
 
     document.getElementById('global-progress-bar').style.transform = `scaleX(${1 - globalPercent / 100})`;
-    document.getElementById('global-progress-count').textContent = `Everyone combined has reviewed ${globalVisibleReviewed} / ${totalVisible}`;
+    document.getElementById('global-progress-count').textContent =
+        `Everyone combined has reviewed ${globalVisibleReviewed} / ${totalVisible} visible photos`;
+
+    console.log({
+        userReviewedVisible,
+        globalVisibleReviewed,
+        totalVisible
+    });
 }
 
 async function loadPhotosForUser(username) {
@@ -302,11 +280,11 @@ async function loadPhotosForUser(username) {
     const filteredPhotos = allPhotos.filter(p => !deletedSet.has(p.filename));
     const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT);
 
-    renderPhotos(selectedPhotos, viewCount);
+    renderPhotos(selectedPhotos, filteredPhotos);
     document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining`;
 
     // ✅ Update the progress bar
-    await updateProgressBar(username, reviewedSet);
+    await updateProgressBar(reviewedSet);
 }
 
 window.onload = async function () {
