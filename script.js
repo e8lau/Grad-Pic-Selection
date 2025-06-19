@@ -280,7 +280,7 @@ async function loadPhotosForUser(username) {
     const filteredPhotos = allPhotos.filter(p => !deletedSet.has(p.filename));
     const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT);
 
-    renderPhotos(selectedPhotos, filteredPhotos);
+    renderPhotos(selectedPhotos, viewCount);
     document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining`;
 
     // ✅ Update the progress bar
