@@ -278,7 +278,9 @@ async function loadPhotosForUser(username) {
     const { deletedSet, reviewedSet, viewCount } = await getUserReviewData(username);
 
     const filteredPhotos = allPhotos.filter(p => !deletedSet.has(p.filename));
-    const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT);
+    const selectedPhotos = shuffleArray(filteredPhotos).slice(0, PHOTO_COUNT).sort((a, b) => a.filename.localeCompare(b.filename));
+
+    console.log(selectedPhotos);
 
     renderPhotos(selectedPhotos, viewCount);
     document.getElementById('kept-count').textContent = `${filteredPhotos.length} remaining`;
