@@ -4,8 +4,8 @@ const BASE_PATH = 'photos';
 const API_BASE = `https://api.github.com/repos/${USER}/${REPO}/contents`;
 const PHOTO_COUNT = 10;
 
-const P1 = 'github_pat_11AKAUWFI0WCKITVtVJzlY_zoxDyrHOUxWLw47';
-const P2 = 'bkW3oEWfmAlkr9YBqNZTq53CEVHfTGS5GMYC9aA1AyGo';
+const P1 = 'github_pat_11AKAUWFI050tvvS0lKavw_Og11snXgobBOP';
+const P2 = 'HtcajFD2HDm8I9RkSHXhswNy20Dv35XLFPABBKqWj4ibW4';
 const GITHUB_TOKEN = P1 + P2;
 
 const SUPABASE_URL = 'https://hmhfnlsdaqtpkmzhhhpw.supabase.co';

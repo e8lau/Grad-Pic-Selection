@@ -5,8 +5,8 @@ const ADMIN_PASSWORD = 'Cody1234*';
 const SUPABASE_URL = 'https://hmhfnlsdaqtpkmzhhhpw.supabase.co';
 const SUPABASE_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtaGZubHNkYXF0cGttemhoaHB3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxMTA1NzksImV4cCI6MjA2NDY4NjU3OX0.JThwSSJ12uXzu5xPikqvzt-AAqceNsiiqT1qsSktF8E';
 
-const P1 = 'github_pat_11AKAUWFI0WCKITVtVJzlY_zoxDyrHOUxWLw47';
-const P2 = 'bkW3oEWfmAlkr9YBqNZTq53CEVHfTGS5GMYC9aA1AyGo';
+const P1 = 'github_pat_11AKAUWFI050tvvS0lKavw_Og11snXgobBOP';
+const P2 = 'HtcajFD2HDm8I9RkSHXhswNy20Dv35XLFPABBKqWj4ibW4';
 const GITHUB_TOKEN = P1 + P2;
 
 const USER = 'e8lau';
