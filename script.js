@@ -2,7 +2,7 @@ const USER = 'e8lau';
 const REPO = 'Grad-Pic-Selection';
 const BASE_PATH = 'photos';
 const API_BASE = `https://api.github.com/repos/${USER}/${REPO}/contents`;
-const PHOTO_COUNT = 10;
+const PHOTO_COUNT = 100;
 
 const P1 = 'github_pat_11AKAUWFI050tvvS0lKavw_Og11snXgobBOP';
 const P2 = 'HtcajFD2HDm8I9RkSHXhswNy20Dv35XLFPABBKqWj4ibW4';
